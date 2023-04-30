@@ -1,0 +1,13 @@
+# Ignore NPM files
+node_modules
+package-lock.json
+
+# Igonre the Composer files
+vendor
+
+# Ignore packages
+*.tar.gz
+*.gz
+*.zip
+*.rar
+*.tar

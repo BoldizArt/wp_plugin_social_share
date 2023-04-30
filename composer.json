@@ -1,0 +1,18 @@
+{
+    "name": "boldizar/socialshare",
+    "description": "Social share plugin for WordPress",
+    "type": "wordpress-plugin",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Boldizar Santo",
+            "email": "boldizar.santo@gmail.com"
+        }
+    ],
+    "minimum-stability": "dev",
+    "autoload": {
+        "psr-4": {
+            "BoldizArt\\SocialShare\\": "src/"
+        }
+    }
+}

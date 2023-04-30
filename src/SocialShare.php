@@ -45,7 +45,7 @@ class SocialShare
         // Test function
         add_action('init', [$this, 'testFunction']);
     }
-
+    
     /**
      * Test function
      * @todo Remove this function
@@ -187,6 +187,29 @@ class SocialShare
                                 <?php endforeach; ?>
                             </td>
                         </tr>
+                        <th scope="row">
+                            <label><?php _e('Use custom color for social mebia icons', 'social_share'); ?></label><br />
+                            <small>(<?php _e('Disable if you want to use their original color', 'social_share'); ?>)</small>
+                        </th>
+                        <td class="media">
+                            <input type="checkbox" 
+                                name="social_share_options[custom_color_enabled]" 
+                                value="1"
+                                id="customColorEnabled"
+                                <?php echo isset($this->socialShareOptions['custom_color_enabled']) &&
+                                    $this->socialShareOptions['custom_color_enabled'] ? 'checked' : ''; 
+                                ?>
+                            >
+                            <label for="customColorEnabled">
+                                <?php _e('Enable custom color', 'social_share'); ?>
+                            </label>
+                            <br/>
+                            <input type="color" 
+                                name="social_share_options[custom_color]" 
+                                value="<?php echo isset($this->socialShareOptions['custom_color']) ? 
+                                    $this->socialShareOptions['custom_color'] : ''; ?>"
+                            >
+                        </td>
                         <tr>
                             <th scope="row">
                                 <label><?php _e('Position of the social media share buttons', 'social_share'); ?></label><br />

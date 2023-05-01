@@ -14,9 +14,6 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 */
 class SocialShare
 {
-    /** @param string $path; */
-    public $path;
-
     /** @param string $version; */
     public $version;
 
@@ -28,13 +25,9 @@ class SocialShare
 
     /**
      * Constructor
-     * @param string $path
      */
-    function __construct(string $path)
+    function __construct()
     {
-        // Set the plugin path
-        $this->path = $path;
-
         // Set the plugin url
         $this->version = '0.0.1';
 
@@ -86,8 +79,8 @@ class SocialShare
         // Add admin menu item
         add_action('admin_menu', [$this, 'socialShareAdminMenuItem']);
 
-        // Test function
-        add_action('init', [$this, 'testFunction']);
+        // Add shortcode
+        add_shortcode('social_share_buttons', [$this, 'registerShortcode']);
 
         // Place the social share bar below the post title
         add_filter('the_title', [$this, 'addBarBelowThePostTitle'], 10, 1);
@@ -100,6 +93,21 @@ class SocialShare
 
         // Place the social share bar inside the featured image
         add_filter('post_thumbnail_html', [$this, 'addBarInsideTheFeaturedImage'], 10, 1);
+
+        // Add settings link to the plugin
+        add_filter('plugin_action_links_' . plugin_basename(dirname(__FILE__, 2) . '/plugin.php'), [$this, 'addPluginSettingsLink']);
+    }
+
+    /**
+     * Add plugin settings link
+     * @param array $links
+     */
+    public function addPluginSettingsLink($links)
+    {
+        $settings = '<a href="' . admin_url('/admin.php?page=social-share') . '">' . __('Settings', 'social_share') . '</a>';
+        array_push($links, $settings);
+
+        return $links;
     }
 
     /**
@@ -173,20 +181,22 @@ class SocialShare
         if (in_array('inside', $positions) && is_singular()) {
             wp_enqueue_style('social_share_style');
             wp_enqueue_script('social_share_script');
-            $html = '<div class="social-share-image-wrapper">'.$html.$this->createSocialShareHtml('inside').'</div>';
+            $html = '<div class="social-share-image-wrapper">' . $html.$this->createSocialShareHtml('inside') . '</div>';
         }
     
         return $html;
     }
     
     /**
-     * Test function
-     * @todo Remove this function
+     * Register a shortcode for social media share buttons
+     * @use [social_share_buttons]
      */
-    public function testFunction()
+    function registerShortcode()
     {
         wp_enqueue_style('social_share_style');
         wp_enqueue_script('social_share_script');
+        
+        return $this->createSocialShareHtml('block');
     }
 
     /**
@@ -210,14 +220,14 @@ class SocialShare
                 if (array_key_exists($socialMedia['name'], $this->socialShareButtons)) {
                     $media = $this->socialShareButtons[$socialMedia['name']];
                     $response .= '
-                        <a href="'.$media['link'].$fullUrl.'" 
-                            title="'.$media['name'].'" 
-                            aria-label="'.$media['name'].'" 
+                        <a href="' . $media['link'] . $fullUrl . '" 
+                            title="' . $media['name'] . '" 
+                            aria-label="' . $media['name'] . '" 
                             rel="noreferrer nofollow" 
                             target="_blank" 
                             class="social-share-link ' . $size . ' ' . $media['id'] . '"
                         >
-                            '.file_get_contents("{$this->path}/assets/icons/{$media['id']}.svg").'
+                            ' . file_get_contents(dirname(__FILE__, 2)."/assets/icons/{$media['id']}.svg") . '
                         </a>
                     ';
                 }
@@ -228,11 +238,11 @@ class SocialShare
         $style = $color ? '
             <style>
                 .social-share-icons .social-share-link {
-                    border: 1px solid '.$color.';
-                    color: '.$color.';
+                    border: 1px solid ' . $color . ';
+                    color: ' . $color . ';
                 }
                 .social-share-icons .social-share-link:hover {
-                    background-color: '.$color.';
+                    background-color: ' . $color . ';
                     color: #fff;
                 }
             </style>

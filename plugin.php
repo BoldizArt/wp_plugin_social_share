@@ -21,7 +21,7 @@ require __DIR__ . '/vendor/autoload.php';
 use BoldizArt\SocialShare\SocialShare;
 
 // Sef init
-$socialShare = new SocialShare(__DIR__);
+$socialShare = new SocialShare();
 
 // Activation
 register_activation_hook(__FILE__, [$socialShare, 'activate']);

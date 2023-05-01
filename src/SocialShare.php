@@ -143,6 +143,7 @@ class SocialShare
         if (in_array('float', $positions) && is_singular()) {
             wp_enqueue_style('social_share_style');
             wp_enqueue_script('social_share_script');
+
             echo $this->createSocialShareHtml('float');
         }
     }
@@ -232,6 +233,15 @@ class SocialShare
                     ';
                 }
             }
+        }
+
+        // Add share button for floated bar
+        if ($type == 'float') {
+            $response .= '
+                <div class="social-share-link share">
+                    ' . file_get_contents(dirname(__FILE__, 2)."/assets/icons/share.svg") . '
+                </div>
+            ';
         }
 
         // Set style

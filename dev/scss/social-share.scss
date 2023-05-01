@@ -8,12 +8,20 @@
     &.float {
         display: block;
         position: fixed;
-        width: 65px;
+        width: 45px;
         left: 1.2rem;
         bottom: 1.2rem;
         padding-left: 0;
         .social-share-link {
             background-color: rgba($white, .65);
+            &:not(.share) {
+                visibility: hidden;
+            }
+        }
+        &:hover {
+            .social-share-link {
+                visibility: visible;
+            }
         }
     }
     &.block {
@@ -61,54 +69,37 @@
     }
 }
 
-// Default icon colors
+// Define mixin to generate styles for social share links
+@mixin social-share-styles($color) {
+    border: 1px solid $color;
+    color: $color;
+    &:hover {
+        background-color: $color;
+        color: $white;
+    }
+}
+
+// Generate styles for social share links
 .social-share-link {
     &.facebook {
-        border: 1px solid $facebook;
-        color: $facebook;
-        &:hover {
-            background-color: $facebook;
-            color: $white;
-        }
+        @include social-share-styles($facebook);
     }
     &.twitter {
-        border: 1px solid $twitter;
-        color: $twitter;
-        &:hover {
-            background-color: $twitter;
-            color: $white;
-        }
+        @include social-share-styles($twitter);
     }
     &.whatsapp {
-        border: 1px solid $whatsapp;
-        color: $whatsapp;
-        &:hover {
-            background-color: $whatsapp;
-            color: $white;
-        }
+        @include social-share-styles($whatsapp);
     }
     &.viber {
-        border: 1px solid $viber;
-        color: $viber;
-        &:hover {
-            background-color: $viber;
-            color: $white;
-        }
+        @include social-share-styles($viber);
     }
     &.pinterest {
-        border: 1px solid $pinterest;
-        color: $pinterest;
-        &:hover {
-            background-color: $pinterest;
-            color: $white;
-        }
+        @include social-share-styles($pinterest);
     }
     &.linkedin {
-        border: 1px solid $linkedin;
-        color: $linkedin;
-        &:hover {
-            background-color: $linkedin;
-            color: $white;
-        }
+        @include social-share-styles($linkedin);
+    }
+    &.share {
+        @include social-share-styles($share);
     }
 }

@@ -14,22 +14,66 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 */
 class SocialShare
 {
+    /** @param string $path; */
+    public $path;
+
     /** @param string $version; */
     public $version;
 
     /** @param array $socialShareOptions; */
     public $socialShareOptions;
 
+    /** @param array $socialShareButtons; */
+    public $socialShareButtons;
+
     /**
      * Constructor
+     * @param string $path
      */
-    function __construct()
+    function __construct(string $path)
     {
+        // Set the plugin path
+        $this->path = $path;
+
         // Set the plugin url
         $this->version = '0.0.1';
 
         // Set the social share options
         $this->socialShareOptions = get_option('social_share_options', []);
+
+        // Set social media buttons
+        $this->socialShareButtons = [
+            'facebook' => [
+                'id' => 'facebook',
+                'name' => 'Facebook',
+                'link' => 'https://www.facebook.com/sharer/sharer.php?u='
+            ],
+            'linkedin' => [
+                'id' => 'linkedin',
+                'name' => 'LinkedIn',
+                'link' => 'https://www.linkedin.com/sharing/share-offsite/?url='
+            ],
+            'twitter' => [
+                'id' => 'twitter',
+                'name' => 'Twitter',
+                'link' => 'http://twitter.com/share?url='
+            ],
+            'viber' => [
+                'id' => 'viber',
+                'name' => 'Viber',
+                'link' => 'viber://forward?text='
+            ],
+            'whatsapp' => [
+                'id' => 'whatsapp',
+                'name' => 'Whatsapp',
+                'link' => 'whatsapp://send?text='
+            ],
+            'pinterest' => [
+                'id' => 'pinterest',
+                'name' => 'Pinterest',
+                'link' => 'http://pinterest.com/pin/create/button/?url='
+            ],
+        ];
 
         // Add styles
         add_action('wp_enqueue_scripts', [$this, 'addStyles']);
@@ -44,6 +88,95 @@ class SocialShare
 
         // Test function
         add_action('init', [$this, 'testFunction']);
+
+        // Place the social share bar below the post title
+        add_filter('the_title', [$this, 'addBarBelowThePostTitle'], 10, 1);
+
+        // Place the social share bar floating on the left area
+        add_action('wp_footer', [$this, 'addFloatingBar']);
+
+        // Place the social share bar after the post content
+        add_filter('the_content', [$this, 'addBarAfterThePostContent'] );
+
+        // Place the social share bar inside the featured image
+        add_filter('post_thumbnail_html', [$this, 'addBarInsideTheFeaturedImage'], 10, 1);
+    }
+
+    /**
+     * Place the social share bar below the post title
+     * @param string $title
+     */
+    function addBarBelowThePostTitle($title)
+    {
+        // Get allowed positions
+        $positions = isset($this->socialShareOptions['position']) && is_array($this->socialShareOptions['position']) ? 
+           $this->socialShareOptions['position'] : [];
+
+        // Only modify the title on single pages
+        if (in_array('below', $positions) && is_singular()) {
+            wp_enqueue_style('social_share_style');
+            wp_enqueue_script('social_share_script');
+            $title .= $this->createSocialShareHtml();
+        }
+    
+        return $title;
+    }
+
+    /**
+     * Place the social share bar floating on the left area
+     */
+    function addFloatingBar()
+    {
+        // Get allowed positions
+        $positions = isset($this->socialShareOptions['position']) && is_array($this->socialShareOptions['position']) ? 
+           $this->socialShareOptions['position'] : [];
+
+        // Only add the div on single pages
+        if (in_array('float', $positions) && is_singular()) {
+            wp_enqueue_style('social_share_style');
+            wp_enqueue_script('social_share_script');
+            echo $this->createSocialShareHtml('float');
+        }
+    }
+    
+    /**
+     * Place the social share bar after the post content
+     * @param string $content
+     */
+    function addBarAfterThePostContent($content)
+    {
+        // Get allowed positions
+        $positions = isset($this->socialShareOptions['position']) && is_array($this->socialShareOptions['position']) ? 
+           $this->socialShareOptions['position'] : [];
+
+        // Only modify the content on single pages
+        if (in_array('after', $positions) && is_singular()) {
+            wp_enqueue_style('social_share_style');
+            wp_enqueue_script('social_share_script');
+            $content .= $this->createSocialShareHtml('block');
+        }
+    
+        return $content;
+    }
+
+    /**
+     * Place the social share bar inside the featured image
+     * @param string $html
+    */
+    function addBarInsideTheFeaturedImage($html)
+    {
+        // Get allowed positions
+        $positions = isset($this->socialShareOptions['position']) && is_array($this->socialShareOptions['position']) ? 
+           $this->socialShareOptions['position'] : [];
+
+        // Only modify the content on single pages
+        if (in_array('inside', $positions) && is_singular()) {
+            wp_enqueue_style('social_share_style');
+            wp_enqueue_script('social_share_script');
+            $html = '<div class="social-share-image-wrapper">'.$html.$this->createSocialShareHtml('inside').'</div>';
+        }
+    
+        return $html;
     }
     
     /**
@@ -56,6 +189,62 @@ class SocialShare
         wp_enqueue_script('social_share_script');
     }
 
+    /**
+     * Create social share HTML
+     * @param string $type
+     * @return string
+     */
+    public function createSocialShareHtml(string $type = 'inline')
+    {
+        $response = '';
+        $fullUrl = urlencode(get_permalink() . '?' . $_SERVER['QUERY_STRING']);
+        $socialMedias = array_key_exists('media', $this->socialShareOptions) ? $this->socialShareOptions['media'] : [];
+        $color = isset($this->socialShareOptions['custom_color_enabled'], $this->socialShareOptions['custom_color']) && 
+            $this->socialShareOptions['custom_color_enabled'] ? 
+            $this->socialShareOptions['custom_color'] : 
+            false;
+        $size = array_key_exists('button_size', $this->socialShareOptions) ? $this->socialShareOptions['button_size'] : 'medium';
+        usort($socialMedias, [$this, 'comparePositions']);
+        foreach ($socialMedias as $socialMedia) {
+            if (isset($socialMedia['name'], $socialMedia['enabled']) && $socialMedia['enabled']) {
+                if (array_key_exists($socialMedia['name'], $this->socialShareButtons)) {
+                    $media = $this->socialShareButtons[$socialMedia['name']];
+                    $response .= '
+                        <a href="'.$media['link'].$fullUrl.'" 
+                            title="'.$media['name'].'" 
+                            aria-label="'.$media['name'].'" 
+                            rel="noreferrer nofollow" 
+                            target="_blank" 
+                            class="social-share-link ' . $size . ' ' . $media['id'] . '"
+                        >
+                            '.file_get_contents("{$this->path}/assets/icons/{$media['id']}.svg").'
+                        </a>
+                    ';
+                }
+            }
+        }
+
+        // Set style
+        $style = $color ? '
+            <style>
+                .social-share-icons .social-share-link {
+                    border: 1px solid '.$color.';
+                    color: '.$color.';
+                }
+                .social-share-icons .social-share-link:hover {
+                    background-color: '.$color.';
+                    color: #fff;
+                }
+            </style>
+        ' : '';
+
+        return $response ? "
+            <div class='social-share-icons {$type}'>
+                {$response}
+                {$style}
+            </div>
+        " : '';
+    }
 
     // create the main menu page
     function socialShareAdminMenuItem() {
@@ -68,6 +257,17 @@ class SocialShare
             'dashicons-share',
             25
         );
+    }
+
+    /**
+     * Compare positions
+     * @param array $a
+     * @param array $b
+     * @return int
+     */
+    public function comparePositions($a, $b)
+    {
+        return $a['position'] - $b['position'];
     }
 
     // callback function for the main menu page
@@ -145,19 +345,10 @@ class SocialShare
                                 <label><?php _e('Social media share buttons', 'social_share'); ?></label>
                             </th>
                             <td>
-                                <?php
-                                    $socialMedias = [
-                                        'facebook' => __('Facebook', 'social_share'),
-                                        'twitter' => __('Twitter', 'social_share'),
-                                        'pinterest' => __('Pinterest', 'social_share'),
-                                        'linkedin' => __('LinkedIn', 'social_share'),
-                                        'whatsapp' => __('Whatsapp', 'social_share'),
-                                        'viber' => __('Viber', 'social_share')
-                                    ];
-                                    foreach ($socialMedias as $name => $socialMedia): 
-                                ?>
+                                <?php foreach ($this->socialShareButtons as $name => $socialShareButton): ?>
                                     <div class="media <?php echo $name; ?>">
-                                        <p><strong> <?php echo $socialMedia; ?></strong></p>
+                                        <p><strong> <?php echo $socialShareButton['name']; ?></strong></p>
+                                        <input type="hidden" name="social_share_options[media][<?php echo $name; ?>][name]" value="<?php echo $name; ?>">
                                         <input type="checkbox" 
                                             name="social_share_options[media][<?php echo $name; ?>][enabled]" 
                                             value="1"
@@ -222,8 +413,8 @@ class SocialShare
                                         []; 
                                 ?>
                                 <?php $positions = [
-                                    'bellow' => __('Below the post title', 'social_share'),
-                                    'floating' => __('Floating on the left area', 'social_share'),
+                                    'below' => __('Below the post title', 'social_share'),
+                                    'float' => __('Floating on the left area', 'social_share'),
                                     'after' => __('After the post content', 'social_share'),
                                     'inside' => __('Inside the featured image', 'social_share'),
                                 ]; ?>

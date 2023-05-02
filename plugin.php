@@ -3,7 +3,7 @@
  Plugin Name: Social share plugin
  Plugin URI: https://github.com/BoldizArt
  Description: Supported shortcodes: [social_share_buttons]
- Version: 0.0.3
+ Version: 0.0.4
  Author: Boldizar Santo (boldizar.santo@gmail.com)
  Author URI: https://github.com/BoldizArt
  Licence: MTI

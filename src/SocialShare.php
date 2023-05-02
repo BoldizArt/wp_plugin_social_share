@@ -29,7 +29,7 @@ class SocialShare
     function __construct()
     {
         // Set the plugin url
-        $this->version = '0.0.3';
+        $this->version = '0.0.4';
 
         // Set the social share options
         $this->socialShareOptions = get_option('social_share_options', []);

@@ -18,26 +18,33 @@
   .social-share-icons.block {
     display: flex;
     padding-left: 0; }
+  .social-share-icons:hover .share {
+    background-color: #333;
+    color: #fff; }
   .social-share-icons .social-share-link {
     display: inline-flex;
+    box-sizing: border-box;
     margin: 3px;
     justify-content: center;
     align-items: center;
     border-radius: 50px;
-    width: 25px;
-    height: 25px;
+    width: 45px;
+    height: 45px;
     padding: 10px;
     transition: background-color ease-in-out 280ms, color ease-in-out 280ms; }
     .social-share-icons .social-share-link svg {
       width: 100%;
       height: auto; }
     .social-share-icons .social-share-link.small {
-      width: 22.5px;
-      height: 22.5px;
-      padding: 7.5px; }
-    .social-share-icons .social-share-link.large {
       width: 35px;
-      height: 35px; }
+      height: 35px;
+      padding: 5px; }
+    .social-share-icons .social-share-link.large {
+      width: 55px;
+      height: 55px; }
+    @media only screen and (min-width: 760px) {
+      .social-share-icons .social-share-link.viber, .social-share-icons .social-share-link.whatsapp {
+        display: none; } }
 
 .social-share-image-wrapper {
   position: relative; }

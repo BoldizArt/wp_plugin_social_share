@@ -29,7 +29,7 @@ class SocialShare
     function __construct()
     {
         // Set the plugin url
-        $this->version = '0.0.2';
+        $this->version = '0.0.3';
 
         // Set the social share options
         $this->socialShareOptions = get_option('social_share_options', []);
@@ -70,10 +70,9 @@ class SocialShare
 
         // Add styles
         add_action('wp_enqueue_scripts', [$this, 'addStyles']);
-        add_action('admin_init', [$this, 'addAdminStyles']);
+        add_action('admin_enqueue_scripts', [$this, 'addAdminStyles']);
 
         // Add scripts
-        add_action('wp_enqueue_scripts', [$this, 'addScripts']);
         add_action('admin_enqueue_scripts', [$this, 'addAdminScripts']);
 
         // Add admin menu item
@@ -123,7 +122,6 @@ class SocialShare
         // Only modify the title on single pages
         if (in_array('below', $positions) && is_singular()) {
             wp_enqueue_style('social_share_style');
-            wp_enqueue_script('social_share_script');
             $title .= $this->createSocialShareHtml();
         }
     
@@ -142,7 +140,6 @@ class SocialShare
         // Only add the div on single pages
         if (in_array('float', $positions) && is_singular()) {
             wp_enqueue_style('social_share_style');
-            wp_enqueue_script('social_share_script');
 
             echo $this->createSocialShareHtml('float');
         }
@@ -161,7 +158,6 @@ class SocialShare
         // Only modify the content on single pages
         if (in_array('after', $positions) && is_singular()) {
             wp_enqueue_style('social_share_style');
-            wp_enqueue_script('social_share_script');
             $content .= $this->createSocialShareHtml('block');
         }
     
@@ -181,7 +177,6 @@ class SocialShare
         // Only modify the content on single pages
         if (in_array('inside', $positions) && is_singular()) {
             wp_enqueue_style('social_share_style');
-            wp_enqueue_script('social_share_script');
             $html = '<div class="social-share-image-wrapper">' . $html.$this->createSocialShareHtml('inside') . '</div>';
         }
     
@@ -195,7 +190,6 @@ class SocialShare
     function registerShortcode()
     {
         wp_enqueue_style('social_share_style');
-        wp_enqueue_script('social_share_script');
         
         return $this->createSocialShareHtml('block');
     }
@@ -210,10 +204,6 @@ class SocialShare
         $response = '';
         $fullUrl = urlencode(get_permalink() . '?' . $_SERVER['QUERY_STRING']);
         $socialMedias = array_key_exists('media', $this->socialShareOptions) ? $this->socialShareOptions['media'] : [];
-        $color = isset($this->socialShareOptions['custom_color_enabled'], $this->socialShareOptions['custom_color']) && 
-            $this->socialShareOptions['custom_color_enabled'] ? 
-            $this->socialShareOptions['custom_color'] : 
-            false;
         $size = array_key_exists('button_size', $this->socialShareOptions) ? $this->socialShareOptions['button_size'] : 'medium';
         usort($socialMedias, [$this, 'comparePositions']);
         foreach ($socialMedias as $socialMedia) {
@@ -244,24 +234,9 @@ class SocialShare
             ';
         }
 
-        // Set style
-        $style = $color ? '
-            <style>
-                .social-share-icons .social-share-link {
-                    border: 1px solid ' . $color . ';
-                    color: ' . $color . ';
-                }
-                .social-share-icons .social-share-link:hover {
-                    background-color: ' . $color . ';
-                    color: #fff;
-                }
-            </style>
-        ' : '';
-
         return $response ? "
             <div class='social-share-icons {$type}'>
                 {$response}
-                {$style}
             </div>
         " : '';
     }
@@ -363,37 +338,51 @@ class SocialShare
                         <tr>
                             <th scope="row">
                                 <label><?php _e('Social media share buttons', 'social_share'); ?></label>
+                                <small>(<?php _e('To change the position of the social media buttons, simply drag and drop them.', 'social_share'); ?>)</small>
+                                
                             </th>
-                            <td>
-                                <?php foreach ($this->socialShareButtons as $name => $socialShareButton): ?>
-                                    <div class="media <?php echo $name; ?>">
-                                        <p><strong> <?php echo $socialShareButton['name']; ?></strong></p>
+                            <td class="social-media-options">
+                                <?php
+                                    $socialShareButtons = $this->socialShareButtons;
+                                    if (array_key_exists('media', $this->socialShareOptions)) {
+                                        $socialMedias =  $this->socialShareOptions['media'];
+                                        foreach ($socialShareButtons as $key => $value) {
+                                            $socialShareButtons[$key]['position'] = 
+                                            array_key_exists($key, $this->socialShareOptions['media']) ? 
+                                                $this->socialShareOptions['media'][$key]['position'] : 0;
+                                        }
+                                        usort($socialShareButtons, [$this, 'comparePositions']);
+                                    }
+                                ?>
+                                <?php foreach ($socialShareButtons as $socialShareButton): ?>
+                                    <?php $name = $socialShareButton['id']; ?>
+                                    <div class="social-media-option check <?php echo $name; ?>">
                                         <input type="hidden" name="social_share_options[media][<?php echo $name; ?>][name]" value="<?php echo $name; ?>">
                                         <input type="checkbox" 
                                             name="social_share_options[media][<?php echo $name; ?>][enabled]" 
                                             value="1"
-                                            id="<?php echo $postType; ?>Enabled"
+                                            id="<?php echo $name; ?>Enabled"
                                             <?php echo isset($this->socialShareOptions['media'],
                                                 $this->socialShareOptions['media'][$name], 
                                                 $this->socialShareOptions['media'][$name]['enabled']) &&
                                                 $this->socialShareOptions['media'][$name]['enabled'] ? 'checked' : ''; 
                                             ?>
                                         >
-                                        <label for="<?php echo $postType; ?>Enabled">
+                                        <label for="<?php echo $name; ?>Enabled">
                                             <?php _e('Enabled', 'social_share'); ?>
                                         </label>
                                         <br>
-                                        <label for="<?php echo $name; ?>">Position</label><br>
                                         <input name="social_share_options[media][<?php echo $name; ?>][position]" 
-                                            type="number" 
-                                            id="<?php echo $name; ?>" 
+                                            type="hidden" 
+                                            class="position" 
                                             value="<?php echo isset($this->socialShareOptions['media'],
                                                 $this->socialShareOptions['media'][$name], 
                                                 $this->socialShareOptions['media'][$name]['position']) ?
                                                 $this->socialShareOptions['media'][$name]['position'] : 0; 
                                             ?>"
                                         >
-                                        <hr />
+                                        <p><strong> <?php echo $socialShareButton['name']; ?></strong></p>
+                                        <img src="<?php echo plugins_url('./../assets/icons/'.$name.'.svg', __FILE__); ?>" class="social-media-icon" alt="<?php echo $name; ?>">
                                     </div>
                                 <?php endforeach; ?>
                             </td>
@@ -402,7 +391,7 @@ class SocialShare
                             <label><?php _e('Use custom color for social mebia icons', 'social_share'); ?></label><br />
                             <small>(<?php _e('Disable if you want to use their original color', 'social_share'); ?>)</small>
                         </th>
-                        <td class="media">
+                        <td class="check">
                             <input type="checkbox" 
                                 name="social_share_options[custom_color_enabled]" 
                                 value="1"
@@ -414,8 +403,9 @@ class SocialShare
                             <label for="customColorEnabled">
                                 <?php _e('Enable custom color', 'social_share'); ?>
                             </label>
-                            <br/>
+                            <br />
                             <input type="color" 
+                                class="custom-color"
                                 name="social_share_options[custom_color]" 
                                 value="<?php echo isset($this->socialShareOptions['custom_color']) ? 
                                     $this->socialShareOptions['custom_color'] : ''; ?>"
@@ -465,6 +455,27 @@ class SocialShare
     function addStyles()
     {
         wp_register_style('social_share_style', plugins_url('./../assets/css/minified/social-share.css', __FILE__), [], $this->version, 'all');
+
+        // Add custom style
+        $color = isset($this->socialShareOptions['custom_color_enabled'], $this->socialShareOptions['custom_color']) && 
+            $this->socialShareOptions['custom_color_enabled'] ? 
+            $this->socialShareOptions['custom_color'] : 
+            false;
+        $customStyle = $color ? '
+            .social-share-icons .social-share-link {
+                border: 1px solid ' . $color . ';
+                color: ' . $color . ';
+            }
+            .social-share-icons .social-share-link:hover {
+                background-color: ' . $color . ';
+                color: #fff;
+            }
+            .social-share-icons:hover .share {
+                background-color: ' . $color . ';
+                color: #fff;
+            }
+        ' : '';
+        wp_add_inline_style('social_share_style', $customStyle);
     }
 
     /**
@@ -472,15 +483,13 @@ class SocialShare
      */
     function addAdminStyles()
     {
-        wp_register_style('social_share_style', plugins_url('./../assets/css/minified/social-share-admin.css', __FILE__), [], $this->version, 'all');
-    }
-
-    /**
-     * Add scripts to the website
-     */
-    function addScripts()
-    {
-        wp_register_script('social_share_script', plugins_url('./../assets/js/minified/social-share.js', __FILE__), [], $this->version, 'all');
+        // Dragula - Drag and drop JavaScrip library style
+        wp_register_style('dragula_style', 'https://cdnjs.cloudflare.com/ajax/libs/dragula/3.7.3/dragula.min.css', [], $this->version, 'all');
+        wp_enqueue_style('dragula_style');
+       
+        // Custom admin style
+        wp_register_style('social_share_admin_style', plugins_url('./../assets/css/minified/social-share-admin.css', __FILE__), [], $this->version, 'all');
+        wp_enqueue_style('social_share_admin_style');
     }
 
     /**
@@ -488,7 +497,13 @@ class SocialShare
      */
     function addAdminScripts()
     {
-        wp_register_script('social_share_script', plugins_url('./../assets/js/minified/social-share-admin.js', __FILE__), [], $this->version, 'all');
+        // Dragula - Drag and drop JavaScript library
+        wp_register_script('dragula_script', 'https://cdnjs.cloudflare.com/ajax/libs/dragula/3.6.6/dragula.min.js', [], $this->version, 'all');
+        wp_enqueue_script('dragula_script');
+
+        // custom adnim sript
+        wp_register_script('social_share_admin_script', plugins_url('./../assets/js/minified/social-share-admin.js', __FILE__), [], $this->version, 'all');
+        wp_enqueue_script('social_share_admin_script');
     }
 
     /** 

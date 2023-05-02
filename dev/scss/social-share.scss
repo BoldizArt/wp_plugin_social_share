@@ -1,3 +1,4 @@
+// Import the color variables
 @import 'social-share/colors';
 
 // Social share icons
@@ -28,14 +29,21 @@
         display: flex;
         padding-left: 0;
     }
+    &:hover {
+        .share {
+            background-color: $share;
+            color: $white;
+        }
+    }
     .social-share-link {
         display: inline-flex;
+        box-sizing: border-box;
         margin: 3px;
         justify-content: center;
         align-items: center;
         border-radius: 50px;
-        width: 25px;
-        height: 25px;
+        width: 45px;
+        height: 45px;
         padding: 10px;
         transition: background-color ease-in-out 280ms, color ease-in-out 280ms;
         svg {
@@ -43,13 +51,21 @@
             height: auto;
         }
         &.small {
-            width: 22.5px;
-            height: 22.5px;
-            padding: 7.5px;
-        }
-        &.large {
             width: 35px;
             height: 35px;
+            padding: 5px;
+        }
+        &.large {
+            width: 55px;
+            height: 55px;
+        }
+
+        // Hide links from non-moblie browsers
+        @media only screen and (min-width: 760px) {
+            &.viber,
+            &.whatsapp {
+                display: none;
+            }
         }
     }
 }

@@ -1,7 +1,61 @@
+// Import the color variables
+@import 'social-share/colors';
+
+// Social share form
 .social-share-form {
-    .media {
+    .check {
         input[type="checkbox"]:not(:checked) ~ * {
             opacity: 0.5;
         }
+    }
+    .social-media-options {
+        .social-media-option {
+            position: relative;
+            width: 280px;
+            min-height: 45px;
+            max-width: 100%;
+            padding: 15px;
+            background: $white;
+            border-radius: 5px;
+            margin-bottom: 15px;
+            cursor: move;
+            .social-media-icon {
+                position: absolute;
+                top: 15px;
+                right: 15px;
+                opacity: .85;
+            }
+        }
+    }
+    .custom-color {
+        margin-top: 10px;
+    }
+}
+
+// Dragula dragged element
+.social-media-option {
+    &.gu-mirror {
+        display: block;
+        box-sizing: border-box;
+        opacity: .65;
+        width: 280px;
+        max-width: 100%;
+        padding: 15px;
+        background: $white;
+        border-radius: 5px;
+        font-size: 14px;
+        cursor: move;
+        p {
+            margin: 4px 0 0 0;
+        }
+        .social-media-icon {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            opacity: .85;
+        }
+    }
+    &.gu-transit {
+        border: 1px dashed #000
     }
 }

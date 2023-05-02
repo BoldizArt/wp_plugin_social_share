@@ -82,7 +82,7 @@ class SocialShare
         add_shortcode('social_share_buttons', [$this, 'registerShortcode']);
 
         // Place the social share bar below the post title
-        add_filter('the_title', [$this, 'addBarBelowThePostTitle'], 10, 1);
+        add_filter('the_title', [$this, 'addBarBelowThePostTitle'], 10, 2);
 
         // Place the social share bar floating on the left area
         add_action('wp_footer', [$this, 'addFloatingBar']);
@@ -91,7 +91,7 @@ class SocialShare
         add_filter('the_content', [$this, 'addBarAfterThePostContent'] );
 
         // Place the social share bar inside the featured image
-        add_filter('post_thumbnail_html', [$this, 'addBarInsideTheFeaturedImage'], 10, 1);
+        add_filter('post_thumbnail_html', [$this, 'addBarInsideTheFeaturedImage'], 10, 2);
 
         // Add settings link to the plugin
         add_filter('plugin_action_links_' . plugin_basename(dirname(__FILE__, 2) . '/plugin.php'), [$this, 'addPluginSettingsLink']);
@@ -110,21 +110,50 @@ class SocialShare
     }
 
     /**
+     * Check if we need to display the social share bar or not
+     * @param string $type
+     * @param int $pid
+     */
+    public function shouldItBeDisplayed(string $type, int $pid = null)
+    {
+        // Get allowed positions and post types
+        $allowedPositions = isset($this->socialShareOptions['position']) && is_array($this->socialShareOptions['position']) ? 
+           $this->socialShareOptions['position'] : [];
+        $allowedPostTypes = isset($this->socialShareOptions['post_types']) && is_array($this->socialShareOptions['post_types']) ? 
+            $this->socialShareOptions['post_types'] : [];
+
+
+        // validate
+        $display = false;
+        $postType = get_post_type();
+        if (in_array($postType, $allowedPostTypes)) {
+            $pid = $pid ?: get_the_ID();
+            if (in_array($type, $allowedPositions) && is_singular()) {
+                $display = true;
+            }
+        }
+
+        // Don't show the bar on teaser posts or other posts displayed on the current page
+        if ($type == 'below' && $pid !== get_queried_object_id()) {
+            $display = false;
+        }
+
+        return $display;
+    }
+
+    /**
      * Place the social share bar below the post title
      * @param string $title
      */
-    function addBarBelowThePostTitle($title)
+    function addBarBelowThePostTitle($title, $pid)
     {
-        // Get allowed positions
-        $positions = isset($this->socialShareOptions['position']) && is_array($this->socialShareOptions['position']) ? 
-           $this->socialShareOptions['position'] : [];
-
         // Only modify the title on single pages
-        if (in_array('below', $positions) && is_singular()) {
+        if ($this->shouldItBeDisplayed('below', $pid)) {
             wp_enqueue_style('social_share_style');
-            $title .= $this->createSocialShareHtml();
+
+            $title .= $this->createSocialShareHtml('below');
         }
-    
+
         return $title;
     }
 
@@ -133,12 +162,8 @@ class SocialShare
      */
     function addFloatingBar()
     {
-        // Get allowed positions
-        $positions = isset($this->socialShareOptions['position']) && is_array($this->socialShareOptions['position']) ? 
-           $this->socialShareOptions['position'] : [];
-
         // Only add the div on single pages
-        if (in_array('float', $positions) && is_singular()) {
+        if ($this->shouldItBeDisplayed('float')) {
             wp_enqueue_style('social_share_style');
 
             echo $this->createSocialShareHtml('float');
@@ -151,13 +176,10 @@ class SocialShare
      */
     function addBarAfterThePostContent($content)
     {
-        // Get allowed positions
-        $positions = isset($this->socialShareOptions['position']) && is_array($this->socialShareOptions['position']) ? 
-           $this->socialShareOptions['position'] : [];
-
         // Only modify the content on single pages
-        if (in_array('after', $positions) && is_singular()) {
+        if ($this->shouldItBeDisplayed('after')) {
             wp_enqueue_style('social_share_style');
+
             $content .= $this->createSocialShareHtml('block');
         }
     
@@ -168,16 +190,17 @@ class SocialShare
      * Place the social share bar inside the featured image
      * @param string $html
     */
-    function addBarInsideTheFeaturedImage($html)
+    function addBarInsideTheFeaturedImage($html, $pid)
     {
-        // Get allowed positions
-        $positions = isset($this->socialShareOptions['position']) && is_array($this->socialShareOptions['position']) ? 
-           $this->socialShareOptions['position'] : [];
+        // Check if there a featured image
+        if (has_post_thumbnail($pid)) {
 
-        // Only modify the content on single pages
-        if (in_array('inside', $positions) && is_singular()) {
-            wp_enqueue_style('social_share_style');
-            $html = '<div class="social-share-image-wrapper">' . $html.$this->createSocialShareHtml('inside') . '</div>';
+            // Only modify the content on single pages
+            if ($this->shouldItBeDisplayed('inside')) {
+                wp_enqueue_style('social_share_style');
+
+                $html = '<div class="social-share-image-wrapper">' . $html.$this->createSocialShareHtml('inside') . '</div>';
+            }
         }
     
         return $html;
@@ -228,7 +251,7 @@ class SocialShare
         // Add share button for floated bar
         if ($type == 'float') {
             $response .= '
-                <div class="social-share-link share">
+                <div class="social-share-link share ' . $size . '">
                     ' . file_get_contents(dirname(__FILE__, 2)."/assets/icons/share.svg") . '
                 </div>
             ';

@@ -1,7 +1,8 @@
 .social-share-icons {
-  display: inline-flex;
+  display: flex;
   align-items: center;
-  padding-left: .6rem; }
+  padding-left: .6rem;
+  z-index: 9; }
   .social-share-icons.float {
     display: block;
     position: fixed;
@@ -15,9 +16,21 @@
         visibility: hidden; }
     .social-share-icons.float:hover .social-share-link {
       visibility: visible; }
+  .social-share-icons.inside {
+    position: absolute;
+    display: flex;
+    justify-content: center;
+    width: 100%;
+    left: 0;
+    bottom: 1.2rem;
+    padding-left: 0; }
+    .social-share-icons.inside .social-share-link {
+      background-color: rgba(255, 255, 255, 0.65); }
   .social-share-icons.block {
     display: flex;
     padding-left: 0; }
+  .social-share-icons.below {
+    display: none; }
   .social-share-icons:hover .share {
     background-color: #333;
     color: #fff; }
@@ -46,16 +59,13 @@
       .social-share-icons .social-share-link.viber, .social-share-icons .social-share-link.whatsapp {
         display: none; } }
 
+h1 .social-share-icons {
+  padding-top: 1.2rem; }
+  h1 .social-share-icons.below {
+    display: flex; }
+
 .social-share-image-wrapper {
   position: relative; }
-  .social-share-image-wrapper .social-share-icons {
-    position: absolute;
-    display: flex;
-    justify-content: flex-end;
-    right: 1.2rem;
-    bottom: 1.2rem; }
-    .social-share-image-wrapper .social-share-icons .social-share-link {
-      background-color: rgba(255, 255, 255, 0.65); }
 
 .social-share-link.facebook {
   border: 1px solid #3b5998;

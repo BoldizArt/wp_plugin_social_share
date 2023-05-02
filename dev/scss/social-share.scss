@@ -3,9 +3,10 @@
 
 // Social share icons
 .social-share-icons {
-    display: inline-flex;
+    display: flex;
     align-items: center;
     padding-left: .6rem;
+    z-index: 9;
     &.float {
         display: block;
         position: fixed;
@@ -25,9 +26,24 @@
             }
         }
     }
+    &.inside {
+        position: absolute;
+        display: flex;
+        justify-content: center;
+        width: 100%;
+        left: 0;
+        bottom: 1.2rem;
+        padding-left: 0;
+        .social-share-link {
+            background-color: rgba($white, .65);
+        }
+    }
     &.block {
         display: flex;
         padding-left: 0;
+    }
+    &.below {
+        display: none;
     }
     &:hover {
         .share {
@@ -70,19 +86,19 @@
     }
 }
 
+// Be sure that the social share bar will not appear in other titles that uses the_title function
+h1 {
+    .social-share-icons {
+        padding-top: 1.2rem;
+        &.below {
+            display: flex;
+        }
+    }
+}
+
 // Icons inside the featured image
 .social-share-image-wrapper {
     position: relative;
-    .social-share-icons {
-        position: absolute;
-        display: flex;
-        justify-content: flex-end;
-        right: 1.2rem;
-        bottom: 1.2rem;
-        .social-share-link {
-            background-color: rgba($white, .65);
-        }
-    }
 }
 
 // Define mixin to generate styles for social share links
